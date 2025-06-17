@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Search, PenTool, User, Settings } from 'lucide-react';
+import { Home, Search, PenTool, User, Settings, Users, FileText, Bell, BarChart3, Shield } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { cn } from '@/lib/utils';
 
@@ -12,13 +12,41 @@ export function MobileNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const navItems = [
+  // Admin navigation items
+  const adminNavItems = [
+    { href: '/', icon: Home, label: 'Home' },
+    { href: '/admin', icon: Shield, label: 'Admin' },
+    { href: '/admin?tab=blogs', icon: FileText, label: 'Blogs' },
+    { href: '/admin?tab=users', icon: Users, label: 'Users' },
+    { href: '/admin?tab=notices', icon: Bell, label: 'Notices' },
+  ];
+
+  // Regular user navigation items
+  const userNavItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/search', icon: Search, label: 'Search' },
     { href: '/create-blog', icon: PenTool, label: 'Write' },
+    { href: '/dashboard', icon: BarChart3, label: 'Dashboard' },
     { href: '/profile', icon: User, label: 'Profile' },
-    { href: '/dashboard', icon: Settings, label: 'Dashboard' },
   ];
+
+  // Guest navigation items
+  const guestNavItems = [
+    { href: '/', icon: Home, label: 'Home' },
+    { href: '/search', icon: Search, label: 'Search' },
+    { href: '/categories', icon: FileText, label: 'Categories' },
+    { href: '/login', icon: User, label: 'Login' },
+  ];
+
+  // Determine which navigation to show
+  let navItems = guestNavItems;
+  if (user) {
+    if (user.role === 'admin' && pathname.startsWith('/admin')) {
+      navItems = adminNavItems;
+    } else {
+      navItems = userNavItems;
+    }
+  }
 
   return (
     <motion.nav
@@ -29,14 +57,10 @@ export function MobileNav() {
     >
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || 
+            (item.href.includes('?tab=') && pathname === item.href.split('?')[0]);
           const Icon = item.icon;
           
-          // Don't show write/dashboard for non-authenticated users
-          if (!user && (item.href === '/create-blog' || item.href === '/dashboard' || item.href === '/profile')) {
-            return null;
-          }
-
           return (
             <Link
               key={item.href}

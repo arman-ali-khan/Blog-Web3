@@ -15,7 +15,8 @@ import {
   MessageSquare,
   Bell,
   Shield,
-  Calendar
+  Calendar,
+  Home
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,8 +27,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import { MobileNav } from '@/components/layout/mobile-nav';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 // Mock data
 const dashboardStats = {
@@ -133,6 +134,73 @@ const systemNotices = [
   }
 ];
 
+// Mobile Bottom Navigation Component for Admin
+function MobileAdminNav({ selectedTab, setSelectedTab }: { selectedTab: string; setSelectedTab: (tab: string) => void }) {
+  const navItems = [
+    { id: 'overview', icon: BarChart3, label: 'Overview' },
+    { id: 'blogs', icon: FileText, label: 'Blogs' },
+    { id: 'users', icon: Users, label: 'Users' },
+    { id: 'notices', icon: Bell, label: 'Notices' },
+    { id: 'home', icon: Home, label: 'Home', href: '/' },
+  ];
+
+  return (
+    <motion.nav
+      className="fixed bottom-4 left-4 right-4 z-50 md:hidden glass rounded-xl p-2"
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex items-center justify-around">
+        {navItems.map((item) => {
+          const isActive = selectedTab === item.id;
+          const Icon = item.icon;
+          
+          if (item.href) {
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-accent"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex flex-col items-center space-y-1"
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-xs font-medium">{item.label}</span>
+                </motion.div>
+              </Link>
+            );
+          }
+          
+          return (
+            <button
+              key={item.id}
+              onClick={() => setSelectedTab(item.id)}
+              className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
+                isActive 
+                  ? "text-primary bg-primary/10" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              }`}
+            >
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex flex-col items-center space-y-1"
+              >
+                <Icon className="w-5 h-5" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </motion.div>
+            </button>
+          );
+        })}
+      </div>
+    </motion.nav>
+  );
+}
+
 export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview');
 
@@ -172,7 +240,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pb-24 md:pb-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -188,111 +256,496 @@ export default function AdminDashboard() {
           </p>
         </motion.div>
 
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="blogs">Blog Management</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="notices">Notices</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+        {/* Desktop Tabs */}
+        <div className="hidden md:block">
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="blogs">Blog Management</TabsTrigger>
+              <TabsTrigger value="users">User Management</TabsTrigger>
+              <TabsTrigger value="notices">Notices</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <Card className="glass">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalUsers)}</div>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-green-600">+{dashboardStats.monthlyGrowth.users}%</span> from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Card className="glass">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Blogs</CardTitle>
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalBlogs)}</div>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-green-600">+{dashboardStats.monthlyGrowth.blogs}%</span> from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <Card className="glass">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{dashboardStats.pendingBlogs}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Blogs awaiting review
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Card className="glass">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalViews)}</div>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-green-600">+{dashboardStats.monthlyGrowth.views}%</span> from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Card className="glass">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <FileText className="w-5 h-5" />
+                        <span>Recent Blog Submissions</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {pendingBlogs.slice(0, 3).map((blog) => (
+                        <div key={blog.id} className="flex items-center space-x-3 p-3 rounded-lg bg-accent/50">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={blog.author.avatar} alt={blog.author.name} />
+                            <AvatarFallback>{blog.author.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm line-clamp-1">{blog.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              by {blog.author.name} • {formatDate(blog.submittedAt)}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {blog.category}
+                          </Badge>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Card className="glass">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Users className="w-5 h-5" />
+                        <span>New User Registrations</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {recentUsers.map((user) => (
+                        <div key={user.id} className="flex items-center space-x-3 p-3 rounded-lg bg-accent/50">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{user.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {user.email} • {formatDate(user.joinedAt)}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={user.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                              {user.status}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {user.role}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
+            </TabsContent>
+
+            {/* Blog Management Tab */}
+            <TabsContent value="blogs" className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Card className="glass">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalUsers)}</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-green-600">+{dashboardStats.monthlyGrowth.users}%</span> from last month
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="glass">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Blogs</CardTitle>
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalBlogs)}</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-green-600">+{dashboardStats.monthlyGrowth.blogs}%</span> from last month
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Card className="glass">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.pendingBlogs}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Blogs awaiting review
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Card className="glass">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalViews)}</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-green-600">+{dashboardStats.monthlyGrowth.views}%</span> from last month
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
               >
                 <Card className="glass">
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <FileText className="w-5 h-5" />
-                      <span>Recent Blog Submissions</span>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>Pending Blog Approvals</span>
+                      <Badge variant="secondary">{pendingBlogs.length} pending</Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Author</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Submitted</TableHead>
+                          <TableHead>Word Count</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingBlogs.map((blog) => (
+                          <TableRow key={blog.id}>
+                            <TableCell className="font-medium max-w-xs">
+                              <div className="line-clamp-2">{blog.title}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={blog.author.avatar} alt={blog.author.name} />
+                                  <AvatarFallback className="text-xs">{blog.author.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm">{blog.author.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{blog.category}</Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDate(blog.submittedAt)}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {blog.wordCount} words
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Button size="sm" variant="outline">
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  Preview
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleApproveBlog(blog.id)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => handleRejectBlog(blog.id)}
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
+            {/* User Management Tab */}
+            <TabsContent value="users" className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="glass">
+                  <CardHeader>
+                    <CardTitle>User Management</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Joined</TableHead>
+                          <TableHead>Blogs</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentUsers.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={user.avatar} alt={user.name} />
+                                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{user.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {user.email}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize">
+                                {user.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                                {user.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {formatDate(user.joinedAt)}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {user.blogCount}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Select onValueChange={(action) => handleUserAction(user.id, action)}>
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue placeholder="Actions" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="activate">Activate</SelectItem>
+                                    <SelectItem value="suspend">Suspend</SelectItem>
+                                    <SelectItem value="promote">Promote</SelectItem>
+                                    <SelectItem value="delete">Delete</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
+            {/* Notices Tab */}
+            <TabsContent value="notices" className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="glass">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>System Notices</span>
+                      <Button>
+                        <Bell className="w-4 h-4 mr-2" />
+                        Create Notice
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {systemNotices.map((notice) => (
+                        <div key={notice.id} className="flex items-center justify-between p-4 rounded-lg bg-accent/50">
+                          <div className="flex-1">
+                            <h4 className="font-medium">{notice.title}</h4>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {notice.type}
+                              </Badge>
+                              <Badge 
+                                variant={notice.priority === 'high' ? 'destructive' : 'default'} 
+                                className="text-xs"
+                              >
+                                {notice.priority}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(notice.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={notice.isActive ? 'default' : 'secondary'}>
+                              {notice.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings" className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="glass">
+                    <CardHeader>
+                      <CardTitle>Platform Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Site Name</label>
+                        <input 
+                          type="text" 
+                          defaultValue="Web3Blog Platform" 
+                          className="w-full p-2 border rounded-lg bg-background"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Site Description</label>
+                        <textarea 
+                          defaultValue="A modern Web3-inspired blogging platform"
+                          className="w-full p-2 border rounded-lg bg-background h-20"
+                        />
+                      </div>
+                      <Button className="w-full">Save Settings</Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="glass">
+                    <CardHeader>
+                      <CardTitle>Content Moderation</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Auto-approve blogs</span>
+                        <input type="checkbox" className="toggle" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Require email verification</span>
+                        <input type="checkbox" defaultChecked className="toggle" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Enable comments</span>
+                        <input type="checkbox" defaultChecked className="toggle" />
+                      </div>
+                      <Button className="w-full">Update Moderation</Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </motion.div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Mobile Content */}
+        <div className="md:hidden">
+          {selectedTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="glass">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Users</span>
+                    </div>
+                    <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalUsers)}</div>
+                  </CardContent>
+                </Card>
+                <Card className="glass">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Blogs</span>
+                    </div>
+                    <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalBlogs)}</div>
+                  </CardContent>
+                </Card>
+                <Card className="glass">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Pending</span>
+                    </div>
+                    <div className="text-2xl font-bold">{dashboardStats.pendingBlogs}</div>
+                  </CardContent>
+                </Card>
+                <Card className="glass">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Views</span>
+                    </div>
+                    <div className="text-2xl font-bold">{formatNumber(dashboardStats.totalViews)}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent Activity */}
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Recent Submissions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
                     {pendingBlogs.slice(0, 3).map((blog) => (
                       <div key={blog.id} className="flex items-center space-x-3 p-3 rounded-lg bg-accent/50">
                         <Avatar className="h-8 w-8">
@@ -302,7 +755,7 @@ export default function AdminDashboard() {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm line-clamp-1">{blog.title}</p>
                           <p className="text-xs text-muted-foreground">
-                            by {blog.author.name} • {formatDate(blog.submittedAt)}
+                            by {blog.author.name}
                           </p>
                         </div>
                         <Badge variant="outline" className="text-xs">
@@ -310,250 +763,120 @@ export default function AdminDashboard() {
                         </Badge>
                       </div>
                     ))}
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Users className="w-5 h-5" />
-                      <span>New User Registrations</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {recentUsers.map((user) => (
-                      <div key={user.id} className="flex items-center space-x-3 p-3 rounded-lg bg-accent/50">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">{user.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {user.email} • {formatDate(user.joinedAt)}
-                          </p>
+          {selectedTab === 'blogs' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">Pending Blogs</h2>
+                <Badge variant="secondary">{pendingBlogs.length}</Badge>
+              </div>
+              {pendingBlogs.map((blog) => (
+                <Card key={blog.id} className="glass">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-medium line-clamp-2">{blog.title}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {blog.category}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {blog.wordCount} words
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={blog.author.avatar} alt={blog.author.name} />
+                            <AvatarFallback className="text-xs">{blog.author.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{blog.author.name}</span>
                         </div>
                         <div className="flex items-center space-x-2">
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                            <CheckCircle className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="destructive">
+                            <XCircle className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {selectedTab === 'users' && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">User Management</h2>
+              {recentUsers.map((user) => (
+                <Card key={user.id} className="glass">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-medium">{user.name}</h3>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {user.role}
+                          </Badge>
                           <Badge variant={user.status === 'active' ? 'default' : 'secondary'} className="text-xs">
                             {user.status}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {user.role}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {selectedTab === 'notices' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">System Notices</h2>
+                <Button size="sm">
+                  <Bell className="w-4 h-4 mr-2" />
+                  Create
+                </Button>
+              </div>
+              {systemNotices.map((notice) => (
+                <Card key={notice.id} className="glass">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-medium">{notice.title}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {notice.type}
+                          </Badge>
+                          <Badge 
+                            variant={notice.priority === 'high' ? 'destructive' : 'default'} 
+                            className="text-xs"
+                          >
+                            {notice.priority}
                           </Badge>
                         </div>
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-          </TabsContent>
-
-          {/* Blog Management Tab */}
-          <TabsContent value="blogs" className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Pending Blog Approvals</span>
-                    <Badge variant="secondary">{pendingBlogs.length} pending</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Author</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead>Word Count</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingBlogs.map((blog) => (
-                        <TableRow key={blog.id}>
-                          <TableCell className="font-medium max-w-xs">
-                            <div className="line-clamp-2">{blog.title}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={blog.author.avatar} alt={blog.author.name} />
-                                <AvatarFallback className="text-xs">{blog.author.name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">{blog.author.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{blog.category}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {formatDate(blog.submittedAt)}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {blog.wordCount} words
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Button size="sm" variant="outline">
-                                <Eye className="w-4 h-4 mr-1" />
-                                Preview
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleApproveBlog(blog.id)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="destructive"
-                                onClick={() => handleRejectBlog(blog.id)}
-                              >
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Reject
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </TabsContent>
-
-          {/* User Management Tab */}
-          <TabsContent value="users" className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Joined</TableHead>
-                        <TableHead>Blogs</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={user.avatar} alt={user.name} />
-                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{user.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {user.email}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="capitalize">
-                              {user.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                              {user.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {formatDate(user.joinedAt)}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {user.blogCount}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Select onValueChange={(action) => handleUserAction(user.id, action)}>
-                                <SelectTrigger className="w-32">
-                                  <SelectValue placeholder="Actions" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="activate">Activate</SelectItem>
-                                  <SelectItem value="suspend">Suspend</SelectItem>
-                                  <SelectItem value="promote">Promote</SelectItem>
-                                  <SelectItem value="delete">Delete</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </TabsContent>
-
-          {/* Notices Tab */}
-          <TabsContent value="notices" className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>System Notices</span>
-                    <Button>
-                      <Bell className="w-4 h-4 mr-2" />
-                      Create Notice
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {systemNotices.map((notice) => (
-                      <div key={notice.id} className="flex items-center justify-between p-4 rounded-lg bg-accent/50">
-                        <div className="flex-1">
-                          <h4 className="font-medium">{notice.title}</h4>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {notice.type}
-                            </Badge>
-                            <Badge 
-                              variant={notice.priority === 'high' ? 'destructive' : 'default'} 
-                              className="text-xs"
-                            >
-                              {notice.priority}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDate(notice.createdAt)}
-                            </span>
-                          </div>
-                        </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(notice.createdAt)}
+                        </span>
                         <div className="flex items-center space-x-2">
-                          <Badge variant={notice.isActive ? 'default' : 'secondary'}>
+                          <Badge variant={notice.isActive ? 'default' : 'secondary'} className="text-xs">
                             {notice.isActive ? 'Active' : 'Inactive'}
                           </Badge>
                           <Button variant="outline" size="sm">
@@ -561,72 +884,17 @@ export default function AdminDashboard() {
                           </Button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle>Platform Settings</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Site Name</label>
-                      <input 
-                        type="text" 
-                        defaultValue="Web3Blog Platform" 
-                        className="w-full p-2 border rounded-lg bg-background"
-                      />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Site Description</label>
-                      <textarea 
-                        defaultValue="A modern Web3-inspired blogging platform"
-                        className="w-full p-2 border rounded-lg bg-background h-20"
-                      />
-                    </div>
-                    <Button className="w-full">Save Settings</Button>
                   </CardContent>
                 </Card>
-
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle>Content Moderation</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Auto-approve blogs</span>
-                      <input type="checkbox" className="toggle" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Require email verification</span>
-                      <input type="checkbox" defaultChecked className="toggle" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Enable comments</span>
-                      <input type="checkbox" defaultChecked className="toggle" />
-                    </div>
-                    <Button className="w-full">Update Moderation</Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </motion.div>
-          </TabsContent>
-        </Tabs>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       <Footer />
-      <MobileNav />
+      <MobileAdminNav selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
     </div>
   );
 }
