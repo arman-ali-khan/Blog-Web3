@@ -1,5 +1,5 @@
 'use client';
-
+import Link from 'next/link';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, ChevronRight, AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -161,9 +161,9 @@ export function NoticeBoard() {
             animate={{ opacity: 1 }}
             className="text-center pt-2"
           >
-            <Button variant="outline" size="sm" className="text-xs">
+           <Link href="/notices"> <Button variant="outline" size="sm" className="text-xs">
               View All Notices ({activeNotices.length - 3} more)
-            </Button>
+            </Button></Link>
           </motion.div>
         )}
       </CardContent>

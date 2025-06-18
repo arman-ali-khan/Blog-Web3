@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save, Eye, Upload, Image as ImageIcon, Link as LinkIcon, Bold, Italic, List, ListOrdered, Quote, Code, Heading1, Heading2, Heading3 } from 'lucide-react';
+import { ArrowLeft, Save, Eye, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
@@ -14,118 +14,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { MobileNav } from '@/components/layout/mobile-nav';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { WritingTips } from '@/components/ui/writing-tips';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { toast } from 'sonner';
-
-// Rich Text Editor Component
-function RichTextEditor({ content, onChange }: { content: string; onChange: (content: string) => void }) {
-  const [isPreview, setIsPreview] = useState(false);
-
-  const insertText = (before: string, after: string = '') => {
-    const textarea = document.getElementById('content-editor') as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    const newText = content.substring(0, start) + before + selectedText + after + content.substring(end);
-    
-    onChange(newText);
-    
-    // Restore cursor position
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, end + before.length);
-    }, 0);
-  };
-
-  const toolbarButtons = [
-    { icon: Heading1, action: () => insertText('# '), label: 'Heading 1' },
-    { icon: Heading2, action: () => insertText('## '), label: 'Heading 2' },
-    { icon: Heading3, action: () => insertText('### '), label: 'Heading 3' },
-    { icon: Bold, action: () => insertText('**', '**'), label: 'Bold' },
-    { icon: Italic, action: () => insertText('*', '*'), label: 'Italic' },
-    { icon: List, action: () => insertText('- '), label: 'Bullet List' },
-    { icon: ListOrdered, action: () => insertText('1. '), label: 'Numbered List' },
-    { icon: Quote, action: () => insertText('> '), label: 'Quote' },
-    { icon: Code, action: () => insertText('`', '`'), label: 'Inline Code' },
-    { icon: LinkIcon, action: () => insertText('[', '](url)'), label: 'Link' },
-    { icon: ImageIcon, action: () => insertText('![alt text](', ')'), label: 'Image' },
-  ];
-
-  const renderPreview = (text: string) => {
-    // Simple markdown-like rendering for preview
-    return text
-      .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold mb-4">$1</h1>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold mb-3">$1</h2>')
-      .replace(/^### (.*$)/gm, '<h3 class="text-xl font-bold mb-2">$1</h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-muted px-1 rounded">$1</code>')
-      .replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-primary pl-4 italic">$1</blockquote>')
-      .replace(/^- (.*$)/gm, '<li>$1</li>')
-      .replace(/^1\. (.*$)/gm, '<li>$1</li>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary underline">$1</a>')
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4" />')
-      .replace(/\n/g, '<br />');
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 flex-wrap">
-          {toolbarButtons.map((button, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              onClick={button.action}
-              title={button.label}
-              className="h-8 w-8 p-0"
-            >
-              <button.icon className="h-4 w-4" />
-            </Button>
-          ))}
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={isPreview ? 'outline' : 'default'}
-            size="sm"
-            onClick={() => setIsPreview(false)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant={isPreview ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setIsPreview(true)}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Preview
-          </Button>
-        </div>
-      </div>
-
-      {isPreview ? (
-        <div 
-          className="min-h-[400px] p-4 border rounded-lg bg-background prose prose-lg max-w-none dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: renderPreview(content) }}
-        />
-      ) : (
-        <Textarea
-          id="content-editor"
-          placeholder="Write your blog content here... Use markdown syntax for formatting."
-          value={content}
-          onChange={(e) => onChange(e.target.value)}
-          className="min-h-[400px] font-mono text-sm"
-        />
-      )}
-    </div>
-  );
-}
 
 const categories = [
   'Web Development', 'JavaScript', 'React', 'Vue.js', 'Angular', 'Node.js',
@@ -138,7 +33,6 @@ export default function CreateBlogPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('write');
   
   const [blogData, setBlogData] = useState({
     title: '',
@@ -147,6 +41,7 @@ export default function CreateBlogPage() {
     category: '',
     tags: '',
     thumbnail: '',
+    socialThumbnail: '',
     status: 'draft' // draft, published, scheduled
   });
 
@@ -163,7 +58,7 @@ export default function CreateBlogPage() {
       newErrors.excerpt = 'Excerpt is required';
     }
     
-    if (!blogData.content.trim()) {
+    if (!blogData.content.trim() || blogData.content === '<p></p>' || blogData.content === '<div></div>') {
       newErrors.content = 'Content is required';
     }
     
@@ -200,13 +95,6 @@ export default function CreateBlogPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleImageUpload = () => {
-    // Simulate image upload
-    const imageUrl = "https://images.pexels.com/photos/8566473/pexels-photo-8566473.jpeg?auto=compress&cs=tinysrgb&w=800&h=400&dpr=2";
-    setBlogData(prev => ({ ...prev, thumbnail: imageUrl }));
-    toast.success('Thumbnail uploaded successfully');
   };
 
   if (!user) {
@@ -268,13 +156,23 @@ export default function CreateBlogPage() {
           </div>
         </motion.div>
 
+        {/* Writing Tips */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <WritingTips />
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.2 }}
             >
               <Card className="glass">
                 <CardHeader>
@@ -289,7 +187,7 @@ export default function CreateBlogPage() {
                       placeholder="Enter your blog title..."
                       value={blogData.title}
                       onChange={(e) => setBlogData(prev => ({ ...prev, title: e.target.value }))}
-                      className={errors.title ? 'border-red-500' : ''}
+                      className={`text-lg font-semibold ${errors.title ? 'border-red-500' : ''}`}
                     />
                     {errors.title && (
                       <p className="text-red-500 text-sm">{errors.title}</p>
@@ -311,12 +209,13 @@ export default function CreateBlogPage() {
                     )}
                   </div>
 
-                  {/* Content Editor */}
+                  {/* Rich Text Editor */}
                   <div className="space-y-2">
                     <Label>Content *</Label>
                     <RichTextEditor
                       content={blogData.content}
                       onChange={(content) => setBlogData(prev => ({ ...prev, content }))}
+                      placeholder="Tell your story..."
                     />
                     {errors.content && (
                       <p className="text-red-500 text-sm">{errors.content}</p>
@@ -333,7 +232,7 @@ export default function CreateBlogPage() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.3 }}
             >
               <Card className="glass">
                 <CardHeader>
@@ -376,36 +275,52 @@ export default function CreateBlogPage() {
                       Separate tags with commas (e.g., react, javascript, tutorial)
                     </p>
                   </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-                  {/* Thumbnail */}
-                  <div className="space-y-2">
-                    <Label>Thumbnail Image</Label>
-                    {blogData.thumbnail ? (
-                      <div className="space-y-2">
-                        <img
-                          src={blogData.thumbnail}
-                          alt="Thumbnail preview"
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setBlogData(prev => ({ ...prev, thumbnail: '' }))}
-                        >
-                          Remove Image
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        onClick={handleImageUpload}
-                        className="w-full"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Thumbnail
-                      </Button>
-                    )}
-                  </div>
+            {/* Thumbnail Upload */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Blog Thumbnail</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload
+                    value={blogData.thumbnail}
+                    onChange={(url) => setBlogData(prev => ({ ...prev, thumbnail: url }))}
+                    onRemove={() => setBlogData(prev => ({ ...prev, thumbnail: '' }))}
+                    label="Main Thumbnail"
+                    description="This image will be displayed in blog listings and previews"
+                    aspectRatio="16/9"
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Social Sharing Thumbnail */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Social Sharing Image</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload
+                    value={blogData.socialThumbnail}
+                    onChange={(url) => setBlogData(prev => ({ ...prev, socialThumbnail: url }))}
+                    onRemove={() => setBlogData(prev => ({ ...prev, socialThumbnail: '' }))}
+                    label="Social Media Thumbnail"
+                    description="Optimized for social media sharing (1200x630px recommended)"
+                    aspectRatio="1200/630"
+                  />
                 </CardContent>
               </Card>
             </motion.div>
@@ -414,7 +329,7 @@ export default function CreateBlogPage() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.6 }}
             >
               <Card className="glass">
                 <CardHeader>
@@ -452,29 +367,6 @@ export default function CreateBlogPage() {
                       )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Writing Tips */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle>Writing Tips</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="text-sm space-y-2 text-muted-foreground">
-                    <li>• Use clear, descriptive titles</li>
-                    <li>• Write engaging excerpts to hook readers</li>
-                    <li>• Break up content with headings and lists</li>
-                    <li>• Add relevant images to illustrate points</li>
-                    <li>• Use tags to help readers find your content</li>
-                    <li>• Proofread before publishing</li>
-                  </ul>
                 </CardContent>
               </Card>
             </motion.div>
