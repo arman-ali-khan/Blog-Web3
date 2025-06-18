@@ -33,6 +33,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
+import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog';
 import { toast } from 'sonner';
 
 // Mock user blogs data
@@ -186,7 +187,10 @@ export default function UserDashboard() {
   };
 
   const handleDeleteBlog = (blogId: number) => {
-    toast.success('Blog deleted successfully');
+    // Simulate API call
+    setTimeout(() => {
+      toast.success('Blog deleted successfully');
+    }, 1000);
   };
 
   const formatDate = (dateString: string) => {
@@ -370,7 +374,7 @@ export default function UserDashboard() {
                           <span>Write New Blog</span>
                         </Button>
                       </Link>
-                      <Link href="/profile">
+                      <Link href="/profile/user">
                         <Button variant="outline" className="w-full h-20 flex flex-col space-y-2">
                           <User className="w-6 h-6" />
                           <span>View Profile</span>
@@ -511,18 +515,21 @@ export default function UserDashboard() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Button size="sm" variant="outline">
-                                  <Edit className="w-4 h-4 mr-1" />
-                                  Edit
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="destructive"
-                                  onClick={() => handleDeleteBlog(blog.id)}
-                                >
-                                  <Trash2 className="w-4 h-4 mr-1" />
-                                  Delete
-                                </Button>
+                                <Link href={`/edit-blog/${blog.id}`}>
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                </Link>
+                                <DeleteConfirmationDialog
+                                  title="Delete Blog Post"
+                                  description={`Are you sure you want to delete "${blog.title}"? This action cannot be undone and will permanently remove the blog post and all its data.`}
+                                  itemName={`"${blog.title}"`}
+                                  onConfirm={() => handleDeleteBlog(blog.id)}
+                                  triggerText="Delete"
+                                  triggerVariant="destructive"
+                                  triggerSize="sm"
+                                />
                               </div>
                             </TableCell>
                           </TableRow>
@@ -753,7 +760,7 @@ export default function UserDashboard() {
                         <span className="text-sm">Write Blog</span>
                       </Button>
                     </Link>
-                    <Link href="/profile">
+                    <Link href="/profile/user">
                       <Button variant="outline" className="w-full h-16 flex flex-col space-y-1">
                         <User className="w-5 h-5" />
                         <span className="text-sm">View Profile</span>
@@ -803,12 +810,20 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Button size="sm" variant="outline">
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button size="sm" variant="destructive">
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                          <Link href={`/edit-blog/${blog.id}`}>
+                            <Button size="sm" variant="outline">
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                          </Link>
+                          <DeleteConfirmationDialog
+                            title="Delete Blog"
+                            itemName={`"${blog.title}"`}
+                            onConfirm={() => handleDeleteBlog(blog.id)}
+                            triggerText=""
+                            triggerVariant="destructive"
+                            triggerSize="sm"
+                            showIcon={true}
+                          />
                         </div>
                       </div>
                     </div>

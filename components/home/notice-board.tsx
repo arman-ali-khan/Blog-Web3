@@ -138,14 +138,14 @@ export function NoticeBoard() {
                         <span className="text-xs opacity-75">
                           {formatTimeAgo(notice.timestamp)}
                         </span>
-                        <Button
+                       <Link href={`/notices/${notice.id}`}> <Button
                           variant="ghost"
                           size="sm"
                           className="h-6 px-2 text-xs"
                         >
                           Read More
                           <ChevronRight className="h-3 w-3 ml-1" />
-                        </Button>
+                        </Button></Link>
                       </div>
                     </div>
                   </div>

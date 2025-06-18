@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Eye, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,10 +29,65 @@ const categories = [
   'Cloud Computing', 'Game Development', 'Tutorial', 'Opinion', 'News'
 ];
 
-export default function CreateBlogPage() {
+// Mock blog data for editing
+const mockBlogData = {
+  1: {
+    id: 1,
+    title: "Getting Started with React Hooks",
+    excerpt: "Learn the fundamentals of React Hooks and how they can simplify your component logic...",
+    content: `
+      <h2>Introduction to React Hooks</h2>
+      <p>React Hooks revolutionized how we write React components by allowing us to use state and other React features in functional components.</p>
+      
+      <h3>What are React Hooks?</h3>
+      <p>Hooks are functions that let you "hook into" React state and lifecycle features from function components. They don't work inside classes — they let you use React without classes.</p>
+      
+      <h3>The useState Hook</h3>
+      <p>The useState Hook lets you add React state to function components:</p>
+      <pre><code>import React, { useState } from 'react';
+
+function Example() {
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;You clicked {count} times&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;
+        Click me
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+      
+      <h3>The useEffect Hook</h3>
+      <p>The useEffect Hook lets you perform side effects in function components. It serves the same purpose as componentDidMount, componentDidUpdate, and componentWillUnmount combined.</p>
+      
+      <h3>Rules of Hooks</h3>
+      <ul>
+        <li>Only call Hooks at the top level</li>
+        <li>Only call Hooks from React functions</li>
+        <li>Don't call Hooks inside loops, conditions, or nested functions</li>
+      </ul>
+      
+      <h3>Conclusion</h3>
+      <p>React Hooks provide a more direct API to the React concepts you already know. They offer a powerful and expressive way to reuse stateful logic between components.</p>
+    `,
+    category: "React",
+    tags: "react, hooks, javascript, frontend",
+    thumbnail: "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?auto=compress&cs=tinysrgb&w=800&h=400&dpr=2",
+    socialThumbnail: "",
+    status: "published",
+    publishedAt: "2024-01-10T10:00:00Z"
+  }
+};
+
+export default function EditBlogPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const blogId = params.id as string;
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingBlog, setIsLoadingBlog] = useState(true);
   
   const [blogData, setBlogData] = useState({
     title: '',
@@ -42,10 +97,46 @@ export default function CreateBlogPage() {
     tags: '',
     thumbnail: '',
     socialThumbnail: '',
-    status: 'draft' // draft, published, scheduled
+    status: 'draft' as 'draft' | 'published' | 'pending'
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load blog data
+  useEffect(() => {
+    const loadBlog = async () => {
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const mockBlog = mockBlogData[blogId as keyof typeof mockBlogData];
+        if (mockBlog) {
+          setBlogData({
+            title: mockBlog.title,
+            excerpt: mockBlog.excerpt,
+            content: mockBlog.content,
+            category: mockBlog.category,
+            tags: mockBlog.tags,
+            thumbnail: mockBlog.thumbnail,
+            socialThumbnail: mockBlog.socialThumbnail,
+            status: mockBlog.status as 'draft' | 'published' | 'pending'
+          });
+        } else {
+          toast.error('Blog not found');
+          router.push('/dashboard');
+        }
+      } catch (error) {
+        toast.error('Failed to load blog');
+        router.push('/dashboard');
+      } finally {
+        setIsLoadingBlog(false);
+      }
+    };
+
+    if (blogId) {
+      loadBlog();
+    }
+  }, [blogId, router]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -85,13 +176,14 @@ export default function CreateBlogPage() {
       const updatedBlogData = { ...blogData, status };
       
       if (status === 'published') {
-        toast.success('Blog published successfully!');
-        router.push('/dashboard');
+        toast.success('Blog updated and published successfully!');
       } else {
-        toast.success('Blog saved as draft');
+        toast.success('Blog updated and saved as draft');
       }
+      
+      router.push('/dashboard');
     } catch (error) {
-      toast.error('Failed to save blog. Please try again.');
+      toast.error('Failed to update blog. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -109,11 +201,26 @@ export default function CreateBlogPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-muted-foreground mb-4">Please log in to create a blog post.</p>
+          <p className="text-muted-foreground mb-4">Please log in to edit blog posts.</p>
           <Link href="/login">
             <Button>Login</Button>
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (isLoadingBlog) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading blog...</p>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -138,9 +245,9 @@ export default function CreateBlogPage() {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold mb-2">Create New Blog</h1>
+              <h1 className="text-4xl font-bold mb-2">Edit Blog</h1>
               <p className="text-muted-foreground">
-                Share your knowledge with the community
+                Update your blog post
               </p>
             </div>
             
@@ -157,7 +264,7 @@ export default function CreateBlogPage() {
                 onClick={() => handleSave('published')}
                 disabled={isLoading}
               >
-                Publish
+                {blogData.status === 'published' ? 'Update' : 'Publish'}
               </Button>
             </div>
           </div>
@@ -242,6 +349,21 @@ export default function CreateBlogPage() {
                   <CardTitle>Blog Settings</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Status */}
+                  <div className="space-y-2">
+                    <Label>Current Status</Label>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={
+                        blogData.status === 'published' ? 'default' :
+                        blogData.status === 'pending' ? 'outline' : 'secondary'
+                      }>
+                        {blogData.status.charAt(0).toUpperCase() + blogData.status.slice(1)}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <Separator />
+
                   {/* Category */}
                   <div className="space-y-2">
                     <Label>Category *</Label>
